@@ -5,31 +5,18 @@ d3.json(url).then(function (data) {
     // Once we get a response, send the data.features object to the createFeatures function.
     createFeatures(data.features);
     console.log(data.features);
+
   });
   
 
   function createFeatures(earthquakeData) {
   
-    // Define a function that we want to run once for each feature in the features array.
-    // // Give each feature a popup that describes the place and time of the earthquake.
-    function onEachFeature(feature,layer) {
-       layer.bindPopup(`<h3>${feature.properties.place}</h3><hr><p>${new Date(feature.properties.time)}</p>`);
-      
-    }
-
-    // Create a GeoJSON layer that contains the features array on the earthquakeData object.
-    // Run the onEachFeature function once for each piece of data in the array.
-    var earthquakes = L.geoJSON(earthquakeData, {
-      onEachFeature: onEachFeature
-    });
-  
-    // Send our earthquakes layer to the createMap function/
     var dt = earthquakeData
 
-    createMap(earthquakes,dt);
+    createMap(dt);
   }
  
-  function createMap(earthquakes,dt) {
+  function createMap(dt) {
     // Create the base layers.
     var street = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -46,9 +33,9 @@ d3.json(url).then(function (data) {
     };
   
     // Create an overlay object to hold our overlay.
-    var overlayMaps = {
-      Earthquakes: earthquakes
-    };
+    // var overlayMaps = {
+    //   Earthquakes: earthquakes
+    // };
   
     // Create our map, giving it the streetmap and earthquakes layers to display on load.
     var myMap = L.map("map", {
@@ -56,7 +43,8 @@ d3.json(url).then(function (data) {
         37.09, -95.71
       ],
       zoom: 5,
-      layers: [street, earthquakes]
+      
+      layers: [street]
     });
   
     // create circle thingies in here
@@ -83,32 +71,58 @@ d3.json(url).then(function (data) {
         else if (color_value >=90){
             var cl = 'red';
         }
+    
         var circle = L.circle([lat,long], {
             fillOpacity: 1.0,
-            color: cl,
+            color: 'black',
+            fillColor: cl,
             radius: 20000*dt[i].properties.mag,
-          }).addTo(myMap)
+          }).bindPopup(`<h3>${dt[i].properties.place}</h3><hr><p>${new Date(dt[i].properties.time)}</p>`).addTo(myMap)
         }
     
-
+//create legend 
+function getColor(c){
+    if (c >=-10 & c < 10){
+        return 'violet';
+    }
+    else if  (c >=10 & c < 30){
+        return'blue';
+    }
+    else if (c >=30 & c < 50){
+       return 'green';
+    }
+    else if (c >=50 & c< 70){
+       return'gold';
+    }
+    else if (c >=70 & c < 90){
+        return 'orange';
+    }
+    else if (c >=90){
+        return 'red';
+    }
+}
 var legend = L.control({position: 'bottomright'});
-legend.onAdd = function (myMap) {
+
+legend.onAdd = function (map) {
 
     var div = L.DomUtil.create('div', 'info legend'),
-        grades = [0, 10, 20, 50, 100, 200, 500, 1000],
-        labels = [];
+        grades = [-10, 10, 30, 50, 70, 90],
+        labels = ["violet","blue","green","gold","orange","red"];
 
     // loop through our density intervals and generate a label with a colored square for each interval
     for (var i = 0; i < grades.length; i++) {
         div.innerHTML +=
-            '<i style="background:' +  + '"></i> ' +
+            '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
             grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
     }
+
     return div;
 };
+
 legend.addTo(myMap);
 
-    L.control.layers(baseMaps, overlayMaps, {
+
+    L.control.layers(baseMaps, {
       collapsed: false
     }).addTo(myMap);
   
