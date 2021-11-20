@@ -4,7 +4,6 @@ var url = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.ge
 d3.json(url).then(function (data) {
     // Once we get a response, send the data.features object to the createFeatures function.
     createFeatures(data.features);
-    console.log(data.features);
 
   });
   
@@ -17,6 +16,7 @@ d3.json(url).then(function (data) {
   }
  
   function createMap(dt) {
+      console.log(dt)
     // Create the base layers.
     var street = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -52,6 +52,7 @@ d3.json(url).then(function (data) {
         var long = dt[i].geometry.coordinates[0];
         var lat = dt[i].geometry.coordinates[1];
         var color_value = dt[i].geometry.coordinates[2];
+        var mg = dt[i].properties.mag
 
         if (color_value >=-10 & color_value < 10){
             var cl = 'violet';
@@ -76,8 +77,9 @@ d3.json(url).then(function (data) {
             fillOpacity: 1.0,
             color: 'black',
             fillColor: cl,
-            radius: 20000*dt[i].properties.mag,
-          }).bindPopup(`<h3>${dt[i].properties.place}</h3><hr><p>${new Date(dt[i].properties.time)}</p>`).addTo(myMap)
+            radius: 15000*mg,
+          }).bindPopup(`<h3>${dt[i].properties.place}</h3><hr><p>${new Date(dt[i].properties.time)}</p>
+          <p>Coordinates: ${long} and ${lat}</p> <p>Maginitude: ${mg}</p><p>Depth: ${color_value}</p>`).addTo(myMap)
         }
     
 //create legend 
@@ -106,8 +108,7 @@ var legend = L.control({position: 'bottomright'});
 legend.onAdd = function (map) {
 
     var div = L.DomUtil.create('div', 'info legend'),
-        grades = [-10, 10, 30, 50, 70, 90],
-        labels = ["violet","blue","green","gold","orange","red"];
+        grades = [-10, 10, 30, 50, 70, 90]
 
     // loop through our density intervals and generate a label with a colored square for each interval
     for (var i = 0; i < grades.length; i++) {
@@ -120,7 +121,6 @@ legend.onAdd = function (map) {
 };
 
 legend.addTo(myMap);
-
 
     L.control.layers(baseMaps, {
       collapsed: false
